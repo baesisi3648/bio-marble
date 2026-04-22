@@ -368,8 +368,9 @@ html, body {
   50%      { transform: scale(1.15); box-shadow: 0 0 10px rgba(255, 215, 0, 1);   }
 }
 
-/* ===== CENTER PANEL (3-column side-by-side) =====
-   Left: dice | Center: title centerpiece | Right: players + action */
+/* ===== CENTER PANEL (3-column side-by-side, symmetric) =====
+   Left and right columns are equal 1fr so the center title sits EXACTLY at
+   the board horizontal center (between 상어 18 and 해마 19 tiles). */
 #center-panel {
   grid-column: 2/10; grid-row: 2/6;
   background: linear-gradient(135deg, #16213e, #1a1a3e);
@@ -378,7 +379,7 @@ html, body {
   overflow: hidden;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1.2fr 240px;
+  grid-template-columns: 1fr auto 1fr;
   grid-template-rows: 1fr;
   grid-template-areas: "dice title right";
   gap: 12px;
@@ -390,6 +391,9 @@ html, body {
   flex-direction: column;
   gap: 8px;
   min-height: 0;
+  max-width: 260px;
+  justify-self: end;
+  width: 100%;
   overflow: hidden;
 }
 
