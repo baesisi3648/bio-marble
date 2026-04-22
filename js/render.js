@@ -24,7 +24,7 @@ const TILES = [
   { id:16, name:'산호',         type:'animal',  region:'바다',   tax:3, emoji:'🪸' },
   { id:17, name:'게',           type:'animal',  region:'바다',   tax:3, emoji:'🦀' },
   { id:18, name:'상어',         type:'animal',  region:'바다',   tax:3, emoji:'🦈' },
-  { id:19, name:'해마',         type:'animal',  region:'바다',   tax:3, emoji:'🐴' },
+  { id:19, name:'해마',         type:'animal',  region:'바다',   tax:3, emoji:'🐠' },
   { id:20, name:'생물구조열쇠', type:'key',     region:null,     tax:0, emoji:'🔑' },
   { id:21, name:'바다거북',     type:'animal',  region:'바다',   tax:3, emoji:'🐢' },
   { id:22, name:'고래',         type:'animal',  region:'바다',   tax:3, emoji:'🐋' },
