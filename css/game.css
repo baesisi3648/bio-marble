@@ -365,27 +365,41 @@ html, body {
   overflow: hidden;
 }
 
-/* Title — TOP CENTER, one line */
+/* Title — CENTERPIECE (부루마블 스타일: 보드 중앙 대형 로고) */
 #center-title {
   grid-area: title;
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 0;
+  padding: 14px 0 10px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 #center-title .title-emoji {
-  font-size: 1.8em;
+  font-size: clamp(2.2em, 4.8vw, 3.6em);
   line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  margin-bottom: -4px;
 }
 #center-title .title-text {
-  font-size: 1.7em; font-weight: bold;
-  background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe);
+  font-size: clamp(2.8em, 6vw, 5em);
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+  letter-spacing: -0.02em;
+  filter: drop-shadow(0 3px 12px rgba(245, 87, 108, 0.5));
 }
-#center-title .title-by { color: #888; font-size: 0.95em; }
+#center-title .title-by {
+  color: #aaa;
+  font-size: clamp(0.85em, 1.3vw, 1.1em);
+  letter-spacing: 2px;
+  margin-top: 4px;
+  font-weight: 500;
+}
 
 /* Dice section (left column — centered within its own column) */
 #dice-section {
