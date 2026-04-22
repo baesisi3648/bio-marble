@@ -8,9 +8,7 @@ const START_LAND_BONUS = 3;
 const QUIZ_TIME_SEC = 10;
 const JAIL_ESCAPE_COST = 3;
 
-const TILES = window.Render.TILES;
-const PLAYER_COLORS = window.Render.PLAYER_COLORS;
-const PLAYER_AVATARS = window.Render.PLAYER_AVATARS;
+// TILES, PLAYER_COLORS, PLAYER_AVATARS are global consts from render.js — do not redeclare.
 
 const GOLDEN_KEYS = [
   { text:'생물 구조에 성공했습니다! 상금 +1 코인',  effect:'coins',       value:1 },
