@@ -93,16 +93,16 @@ function renderBoard(state) {
     board.appendChild(cell);
   }
 
-  // Center panel
+  // Center panel — grid layout: [title full-width] / [dice wide | players narrow] / [action full-width]
   const cp = document.createElement('div');
   cp.id = 'center-panel';
   cp.innerHTML = `
-    <div id="center-left">
-      <div id="center-title">
-        <div class="title-emoji">🌍</div>
-        <div class="title-text">생명 마블</div>
-        <div class="title-sub">by 용쌤</div>
-      </div>
+    <div id="center-title">
+      <span class="title-emoji">🌍</span>
+      <span class="title-text">생명 마블</span>
+      <span class="title-by">by 용쌤</span>
+    </div>
+    <div id="dice-section">
       <div id="turn-box">
         <div class="turn-label">현재 차례</div>
         <div class="turn-name" id="current-name">-</div>
@@ -117,13 +117,11 @@ function renderBoard(state) {
         <button id="btn-roll">🎲 주사위 굴리기</button>
       </div>
     </div>
-    <div id="center-right">
-      <div id="players-box">
-        <h4>모둠 현황</h4>
-        <div id="players-list"></div>
-      </div>
-      <div id="action-box"></div>
-    </div>`;
+    <div id="players-box">
+      <h4>모둠 현황</h4>
+      <div id="players-list"></div>
+    </div>
+    <div id="action-box"></div>`;
   board.appendChild(cp);
 
   renderTokens(state);
@@ -140,6 +138,7 @@ function renderTokens(state) {
     if (!c) return;
     const t = document.createElement('div');
     t.className = 'token';
+    if (i === state.current) t.classList.add('active-turn');
     t.style.borderColor = p.color;
     t.textContent = PLAYER_AVATARS[i];
     t.title = p.name;

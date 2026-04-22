@@ -3,10 +3,16 @@
 
 const START_COINS = 30;
 const RESERVE_FEE = 5;          // paid into pool when pool is empty
-const START_PASS_BONUS = 2;
-const START_LAND_BONUS = 3;
+const START_PASS_BONUS = 5;
+const START_LAND_BONUS = 7;
 const QUIZ_TIME_SEC = 10;
 const JAIL_ESCAPE_COST = 3;
+const BUILD_COST_SUCCESS = 2;           // 퀴즈 성공 시 건설비
+const BUILD_COST_FAIL_BASE = 4;         // 퀴즈 실패 시 건설비 (+세금)
+const TOLL_BASE = 2;                    // 관람비 기본 2코인 (+지역세금)
+const TOLL_FAIL_EXTRA = 2;              // 관람비 실패 시 추가 2코인
+// 관람비 배수: Lv.1 x1, Lv.2 x2, Lv.3 x3
+const TOLL_MULT = { 1: 1, 2: 2, 3: 3 };
 
 // TILES, PLAYER_COLORS, PLAYER_AVATARS are global consts from render.js — do not redeclare.
 
@@ -95,8 +101,8 @@ function showRulesModal(onConfirm) {
       <div class="rules-section">
         <div class="rules-section-title">🎮 기본</div>
         <ul>
-          <li>주사위 2개를 굴려 합산만큼 이동합니다 (2~12칸)</li>
-          <li>시작 코인은 <b style="color:#ffd700">30개</b></li>
+          <li>주사위 2개를 굴려 합산만큼 이동 (2~12칸)</li>
+          <li>시작 코인 <b style="color:#ffd700">30개</b></li>
           <li>코인이 0이 되면 파산, 마지막 1팀이 우승!</li>
         </ul>
       </div>
@@ -104,21 +110,30 @@ function showRulesModal(onConfirm) {
       <div class="rules-section">
         <div class="rules-section-title">🏁 특수 칸</div>
         <ul>
-          <li>🏁 <b>START</b>: 통과 +2 / 도착 +3 코인</li>
+          <li>🏁 <b>START</b>: 통과 <b style="color:#ffd700">+5</b> / 도착 <b style="color:#ffd700">+7</b> 코인</li>
           <li>🏕️ <b>생물보호구역</b>: 비었으면 5코인 납부, 찼으면 누적 전액 획득</li>
           <li>⛓️ <b>감옥</b>: 2턴 정지 또는 3코인 내고 탈출</li>
           <li>✈️ <b>세계동물여행</b>: 원하는 동물 칸으로 즉시 이동</li>
-          <li>🔑 <b>생물구조열쇠</b>: 랜덤 카드(상금/벌금/이동/강탈 등)</li>
+          <li>🔑 <b>생물구조열쇠</b>: 랜덤 카드 (상금/벌금/이동/강탈 등)</li>
         </ul>
       </div>
 
       <div class="rules-section">
         <div class="rules-section-title">🐾 동물 칸 (퀴즈)</div>
         <ul>
-          <li>[시작] 버튼 → <b>3-2-1 카운트다운</b> → <b>10초</b> 문제</li>
-          <li>성공: 2코인으로 동물원 건설 / 실패: 2 + 지역 세금</li>
-          <li>🎡 Lv.1 → 🎢 Lv.2 (관람비 2배) → 🏰 <b>Lv.3 무적</b></li>
-          <li>상대 동물원 방문: 관람비 지불, 성공 시 2배로 <b>인수</b> 가능</li>
+          <li>[시작] 버튼 → <b>3-2-1</b> → <b>10초</b> 문제 풀이</li>
+          <li>건설비 — 성공: <b>2코인</b> / 실패: <b>4 + 지역세금</b></li>
+          <li>🎡 Lv.1 (관람비 ×1) → 🎢 Lv.2 (×2) → 🏰 <b>Lv.3 무적</b> (×3)</li>
+        </ul>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-section-title">🏛️ 상대 동물원 방문</div>
+        <ul>
+          <li>관람비 = (세금 + 2) × Lv배수, 실패 시 +2코인</li>
+          <li>퀴즈 성공 + <b>Lv.1 동물원</b>일 때만 <b>2배 지불로 인수</b> 가능</li>
+          <li>Lv.2 이상은 인수 불가 (관람비만 지불)</li>
+          <li>인수해도 레벨은 Lv.1 유지 (업그레이드 X)</li>
         </ul>
       </div>
 
@@ -390,7 +405,7 @@ function escapeHtml(s) {
 // ===== BUILD / TOLL =====
 function buildAfterQuiz(tile, ok) {
   const p = state.players[state.current];
-  const cost = ok ? 2 : (2 + tile.tax);
+  const cost = ok ? BUILD_COST_SUCCESS : (BUILD_COST_FAIL_BASE + tile.tax);
   if (p.coins >= cost) {
     showAction([
       { text: `🏛️ 동물원 건설 (${cost}코인)`, class: 'action-btn btn-build', action() {
@@ -420,8 +435,10 @@ function tollAfterQuiz(tile, ok) {
   const zoo = state.zoos[tile.id];
   if (!zoo) { showNextTurn(); return; }
   const owner = state.players[zoo.owner];
-  const mult = zoo.level >= 2 ? 2 : 1;
-  const toll = ok ? (tile.tax + 2) * mult : (tile.tax + 2 + 2) * mult;
+  const mult = TOLL_MULT[zoo.level] || 1;
+  const toll = ok
+    ? (tile.tax + TOLL_BASE) * mult
+    : (tile.tax + TOLL_BASE + TOLL_FAIL_EXTRA) * mult;
 
   const acts = [{
     text: `💰 관람비 ${toll}코인 지불`,
@@ -438,7 +455,9 @@ function tollAfterQuiz(tile, ok) {
     }
   }];
 
-  if (ok && zoo.level < 3) {
+  // 인수는 Lv.1 동물원만 가능 (Lv.2, Lv.3 인수 불가)
+  // 인수해도 레벨은 그대로 Lv.1 유지 (업그레이드 X)
+  if (ok && zoo.level === 1) {
     const tc = toll * 2;
     if (p.coins >= tc) acts.push({
       text: `🔄 인수 (${tc}코인)`,
@@ -446,7 +465,7 @@ function tollAfterQuiz(tile, ok) {
       action() {
         p.coins -= tc; owner.coins += tc;
         zoo.owner = state.current;
-        zoo.level = Math.min(zoo.level + 1, 3);
+        // level stays at 1 on takeover
         AudioMgr.playSfx('zooBuild');
         Render.renderZoos(state);
         Render.renderPlayers(state);
@@ -758,6 +777,7 @@ function nextTurn() {
   }
   state.current = next;
   state.phase = 'roll';
+  Render.renderTokens(state);       // refresh active-turn spotlight
   Render.renderPlayers(state);
   Render.updateTurnInfo(state);
   checkJailOnTurn();
