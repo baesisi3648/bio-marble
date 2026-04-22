@@ -103,6 +103,7 @@ function showRulesModal(onConfirm) {
         <ul>
           <li>주사위 2개를 굴려 합산만큼 이동 (2~12칸)</li>
           <li>시작 코인 <b style="color:#ffd700">30개</b></li>
+          <li>⚡ <b>더블</b>(같은 숫자)이 나오면 <b>한 번 더</b> 굴립니다</li>
           <li>코인이 0이 되면 파산, 마지막 1팀이 우승!</li>
         </ul>
       </div>
@@ -112,7 +113,7 @@ function showRulesModal(onConfirm) {
         <ul>
           <li>🏁 <b>START</b>: 통과 <b style="color:#ffd700">+5</b> / 도착 <b style="color:#ffd700">+7</b> 코인</li>
           <li>🏕️ <b>생물보호구역</b>: 비었으면 5코인 납부, 찼으면 누적 전액 획득</li>
-          <li>⛓️ <b>감옥</b>: 2턴 정지 또는 3코인 내고 탈출</li>
+          <li>⛓️ <b>감옥</b>: 2턴 정지 / 3코인 납부 / 주사위 <b>더블</b>로 탈출</li>
           <li>✈️ <b>세계동물여행</b>: 원하는 동물 칸으로 즉시 이동</li>
           <li>🔑 <b>생물구조열쇠</b>: 랜덤 카드 (상금/벌금/이동/강탈 등)</li>
         </ul>
@@ -163,10 +164,32 @@ async function rollDice() {
   const r1 = Math.floor(Math.random() * 6) + 1;
   const r2 = Math.floor(Math.random() * 6) + 1;
   const total = r1 + r2;
+  const isDouble = r1 === r2;
   state.diceResult = total;
 
   await Render.animateDiceRoll(r1, r2);
-  setTimeout(() => movePlayer(total), 350);
+
+  if (isDouble) {
+    // Queue an extra roll for the same player (nextTurn consumes from doubleTurnNext)
+    state.doubleTurnNext.push(state.current);
+    showDoubleEffect();
+    setTimeout(() => movePlayer(total), 1300);
+  } else {
+    setTimeout(() => movePlayer(total), 350);
+  }
+}
+
+// Celebratory overlay shown briefly when doubles are rolled
+function showDoubleEffect(title = '⚡ 더블! ⚡', subtitle = '한 번 더 굴릴 수 있어요!') {
+  const old = document.getElementById('double-effect');
+  if (old) old.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'double-effect';
+  overlay.innerHTML =
+    `<div class="double-text">${title}<span>${subtitle}</span></div>`;
+  document.body.appendChild(overlay);
+  AudioMgr.playSfx('goldenKey');
+  setTimeout(() => overlay.remove(), 1400);
 }
 
 // ===== MOVEMENT =====
@@ -513,10 +536,10 @@ function handleJail() {
   const p = state.players[state.current];
   state.jailTurns[state.current] = 2;
   AudioMgr.playSfx('jail');
-  const btns = [{
-    text:'감옥에서 대기', class:'btn-fail',
-    action(){ closeModal(); showNextTurn(); }
-  }];
+  const btns = [
+    { text:'🎲 주사위 탈출 시도', class:'btn-upgrade', action(){ closeModal(); tryJailEscape(); } },
+    { text:'감옥에서 대기', class:'btn-fail', action(){ closeModal(); showNextTurn(); } },
+  ];
   if (p.coins >= JAIL_ESCAPE_COST) btns.unshift({
     text:`💰 ${JAIL_ESCAPE_COST}코인으로 탈출`, class:'btn-success',
     action(){
@@ -529,7 +552,7 @@ function handleJail() {
     }
   });
   showModal('⛓️','감옥!',
-    `<p style="text-align:center">2턴 정지 또는 ${JAIL_ESCAPE_COST}코인으로 즉시 탈출</p>`, btns);
+    `<p style="text-align:center">${JAIL_ESCAPE_COST}코인 납부 또는 주사위 <b>더블</b>로 탈출<br>실패 시 2턴 정지</p>`, btns);
 }
 
 function checkJailOnTurn() {
@@ -543,28 +566,52 @@ function checkJailOnTurn() {
       Render.updateTurnInfo(state);
     } else {
       state.jailTurns[state.current]--;
-      if (p.coins >= JAIL_ESCAPE_COST) {
-        showModal('⛓️','감옥',
-          `<p style="text-align:center">${state.jailTurns[state.current]}턴 남음</p>`,
-          [
-            { text:`💰 ${JAIL_ESCAPE_COST}코인 탈출`, class:'btn-success', action(){
-                p.coins -= JAIL_ESCAPE_COST;
-                delete state.jailTurns[state.current];
-                closeModal();
-                Render.renderPlayers(state);
-                Render.updateTurnInfo(state);
-                state.phase = 'roll';
-                Render.updateTurnInfo(state);
-            }},
-            { text:'대기', class:'btn-fail', action(){ closeModal(); showNextTurn(); } },
-          ]);
-      } else {
-        showNextTurn();
-      }
+      const remain = state.jailTurns[state.current];
+      const btns = [
+        { text:'🎲 주사위 탈출 시도', class:'btn-upgrade', action(){ closeModal(); tryJailEscape(); } },
+        { text:'대기', class:'btn-fail', action(){ closeModal(); showNextTurn(); } },
+      ];
+      if (p.coins >= JAIL_ESCAPE_COST) btns.unshift({
+        text:`💰 ${JAIL_ESCAPE_COST}코인 탈출`, class:'btn-success',
+        action(){
+          p.coins -= JAIL_ESCAPE_COST;
+          delete state.jailTurns[state.current];
+          closeModal();
+          Render.renderPlayers(state);
+          Render.updateTurnInfo(state);
+          state.phase = 'roll';
+          Render.updateTurnInfo(state);
+        }
+      });
+      showModal('⛓️','감옥',
+        `<p style="text-align:center">${remain}턴 남음<br>주사위 더블이 나오면 즉시 탈출!</p>`, btns);
     }
   } else {
     state.phase = 'roll';
     Render.updateTurnInfo(state);
+  }
+}
+
+// Roll a pair of dice from jail. Doubles -> escape + move by sum. Otherwise -> turn ends.
+async function tryJailEscape() {
+  state.phase = 'rolling';
+  AudioMgr.playSfx('dice');
+  const r1 = Math.floor(Math.random() * 6) + 1;
+  const r2 = Math.floor(Math.random() * 6) + 1;
+  const total = r1 + r2;
+  await Render.animateDiceRoll(r1, r2);
+
+  if (r1 === r2) {
+    // Doubles — escape (no extra roll bonus on jail escape)
+    delete state.jailTurns[state.current];
+    showDoubleEffect('🔓 탈출 성공!', `더블 ${r1}+${r2}=${total} · 이동합니다`);
+    setTimeout(() => movePlayer(total), 1300);
+  } else {
+    setTimeout(() => {
+      showModal('⛓️', '탈출 실패',
+        `<p style="text-align:center">주사위 <b>${r1}</b> + <b>${r2}</b> — 더블이 아닙니다.<br>다음 턴에 다시 시도하세요.</p>`,
+        [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+    }, 500);
   }
 }
 
