@@ -557,6 +557,43 @@ html, body {
   box-shadow: 0 6px 20px rgba(249, 168, 37, 0.4);
 }
 
+/* ===== RULES MODAL ===== */
+.rules-card {
+  text-align: left;
+  padding: 4px 2px;
+}
+.rules-section { margin-bottom: 14px; }
+.rules-section:last-child { margin-bottom: 8px; }
+.rules-section-title {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #4facfe;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.3);
+}
+.rules-card ul {
+  list-style: none;
+  padding: 0;
+}
+.rules-card li {
+  padding: 4px 0 4px 8px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: #e0e0e0;
+}
+.rules-card li b { color: #fff; }
+.rules-hint {
+  text-align: center;
+  font-size: 0.9em;
+  color: #888;
+  margin-top: 10px;
+  padding: 8px;
+  background: rgba(79, 172, 254, 0.08);
+  border-radius: 8px;
+  border-left: 3px solid #4facfe;
+}
+
 /* ===== FULL-SCREEN QUIZ ===== */
 #quiz-overlay {
   display: none; position: fixed; inset: 0;

@@ -83,7 +83,53 @@ async function startGame() {
   // First user gesture reached game start click => BGM starts
   AudioMgr.startBgm();
 
-  checkJailOnTurn();
+  // Lock dice roll button until user reads the rules
+  state.phase = 'rules';
+  Render.updateTurnInfo(state);
+  showRulesModal(() => checkJailOnTurn());
+}
+
+function showRulesModal(onConfirm) {
+  const html = `
+    <div class="rules-card">
+      <div class="rules-section">
+        <div class="rules-section-title">🎮 기본</div>
+        <ul>
+          <li>주사위 2개를 굴려 합산만큼 이동합니다 (2~12칸)</li>
+          <li>시작 코인은 <b style="color:#ffd700">30개</b></li>
+          <li>코인이 0이 되면 파산, 마지막 1팀이 우승!</li>
+        </ul>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-section-title">🏁 특수 칸</div>
+        <ul>
+          <li>🏁 <b>START</b>: 통과 +2 / 도착 +3 코인</li>
+          <li>🏕️ <b>생물보호구역</b>: 비었으면 5코인 납부, 찼으면 누적 전액 획득</li>
+          <li>⛓️ <b>감옥</b>: 2턴 정지 또는 3코인 내고 탈출</li>
+          <li>✈️ <b>세계동물여행</b>: 원하는 동물 칸으로 즉시 이동</li>
+          <li>🔑 <b>생물구조열쇠</b>: 랜덤 카드(상금/벌금/이동/강탈 등)</li>
+        </ul>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-section-title">🐾 동물 칸 (퀴즈)</div>
+        <ul>
+          <li>[시작] 버튼 → <b>3-2-1 카운트다운</b> → <b>10초</b> 문제</li>
+          <li>성공: 2코인으로 동물원 건설 / 실패: 2 + 지역 세금</li>
+          <li>🎡 Lv.1 → 🎢 Lv.2 (관람비 2배) → 🏰 <b>Lv.3 무적</b></li>
+          <li>상대 동물원 방문: 관람비 지불, 성공 시 2배로 <b>인수</b> 가능</li>
+        </ul>
+      </div>
+
+      <div class="rules-hint">진행자(선생님)가 성공/실패를 판정합니다.</div>
+    </div>`;
+  showModal('📜', '게임 규칙', html, [
+    { text: '🎮 시작하기', class: 'btn-success', action() {
+        closeModal();
+        onConfirm();
+    }}
+  ]);
 }
 
 function wireGameControls() {
