@@ -106,7 +106,7 @@
     collapseBtn.addEventListener('click', collapsePanel);
     peek.addEventListener('click', expandPanel);
 
-    // Show collapsed-by-default peek button when game starts
+    // On game start: minimized by default (only the 🎵 peek button shows)
     const origStart = window.startGame;
     window.startGame = async function() {
       try {
@@ -114,8 +114,7 @@
       } catch (e) {
         console.error('[bio-marble] startGame error:', e);
       }
-      // Default state when game starts: panel expanded
-      expandPanel();
+      collapsePanel();
     };
   })();
 </script>

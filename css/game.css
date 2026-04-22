@@ -149,107 +149,119 @@ html, body {
 @keyframes tokenBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes tokenHop { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-16px) scale(1.15); } 100% { transform: translateY(0) scale(1); } }
 
-/* ===== 3D ZOO BUILDINGS ===== */
+/* ===== 놀이공원 스타일 동물원 ===== */
 .zoo-indicator {
   position: absolute; inset: 0;
   pointer-events: none;
   display: flex; align-items: center; justify-content: center;
   perspective: 600px;
+  z-index: 2;
 }
-.zoo-building {
+.zoo-park {
   position: relative;
-  width: 58%;
-  height: 58%;
-  transform-style: preserve-3d;
-  animation: zooRise 0.7s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes zooRise {
-  0% { transform: translateY(40%) scale(0.3) rotateX(40deg); opacity: 0; }
-  60% { transform: translateY(-8%) scale(1.1) rotateX(-8deg); opacity: 1; }
-  100% { transform: translateY(0) scale(1) rotateX(0); opacity: 1; }
-}
-.zoo-roof {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 35%;
-  background: linear-gradient(135deg, var(--zoo-color), color-mix(in srgb, var(--zoo-color) 60%, black));
-  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.3));
-}
-.zoo-body {
-  position: absolute; top: 30%; left: 8%; right: 8%; bottom: 0;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--zoo-color) 85%, white),
-    var(--zoo-color),
-    color-mix(in srgb, var(--zoo-color) 70%, black));
-  border-radius: 3px 3px 1px 1px;
+  width: 80%; height: 78%;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--zoo-color) 45%, transparent), transparent 70%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--zoo-color) 35%, #101020),
+      color-mix(in srgb, var(--zoo-color) 70%, #101020));
+  border: 3px solid var(--zoo-color);
   box-shadow:
-    inset -4px -4px 0 rgba(0,0,0,0.25),
-    inset 3px 3px 0 rgba(255,255,255,0.2),
-    0 4px 10px rgba(0,0,0,0.5);
+    inset 0 -4px 8px rgba(0,0,0,0.35),
+    inset 0 2px 6px rgba(255,255,255,0.15),
+    0 6px 14px rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  animation: zooPop 0.65s cubic-bezier(.34,1.56,.64,1);
+  overflow: hidden;
 }
-.zoo-door {
-  position: absolute; bottom: 0; left: 40%;
-  width: 20%; height: 40%;
-  background: #222;
-  border-radius: 50% 50% 0 0;
-  box-shadow: inset 0 -2px 2px rgba(255,255,255,0.1);
+@keyframes zooPop {
+  0%   { transform: translateY(30%) scale(0.3); opacity: 0; }
+  60%  { transform: translateY(-5%) scale(1.1); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
 }
-.zoo-label {
-  position: absolute; top: 32%; left: 50%;
-  transform: translateX(-50%);
-  font-size: clamp(0.65em, 1.1vw, 0.9em);
-  font-weight: 900;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.9);
-  white-space: nowrap;
-  letter-spacing: 0.5px;
+.zoo-ride {
+  font-size: clamp(1.8em, 3.4vw, 2.8em);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7));
+  animation: zooRideBob 2.4s ease-in-out infinite;
+}
+@keyframes zooRideBob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-4px) rotate(2deg); }
 }
 
-/* Level 2 — taller, shinier */
-.zoo-lv2 .zoo-body {
-  box-shadow:
-    inset -4px -4px 0 rgba(0,0,0,0.25),
-    inset 3px 3px 0 rgba(255,255,255,0.25),
-    0 0 14px rgba(255, 215, 0, 0.6),
-    0 4px 10px rgba(0,0,0,0.5);
-}
-.zoo-lv2 .zoo-roof {
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
-}
-.zoo-lv2::before {
-  content: '⭐⭐';
-  position: absolute; top: -18%; left: 50%;
-  transform: translateX(-50%);
-  font-size: clamp(0.7em, 1vw, 0.9em);
+/* Sparkles for Lv.2+ */
+.zoo-sparkle {
+  position: absolute;
+  font-size: clamp(0.7em, 1.2vw, 1em);
   filter: drop-shadow(0 0 4px gold);
+  animation: sparkleTwinkle 1.6s ease-in-out infinite;
 }
+.zoo-sparkle.s1 { top: 6%;  left: 8%;  animation-delay: 0s;   }
+.zoo-sparkle.s2 { top: 8%;  right: 8%; animation-delay: .4s;  }
+.zoo-sparkle.s3 { bottom: 10%; left: 10%; animation-delay: .8s; }
+.zoo-sparkle.s4 { bottom: 8%; right: 10%; animation-delay: 1.2s; }
+@keyframes sparkleTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1.3); }
+}
+
+/* Level 2 — golden shine */
+.zoo-lv2 .zoo-park {
+  border-color: #ffd700;
+  box-shadow:
+    inset 0 -4px 8px rgba(0,0,0,0.35),
+    inset 0 2px 6px rgba(255,255,255,0.25),
+    0 0 14px rgba(255, 215, 0, 0.6),
+    0 6px 14px rgba(0,0,0,0.55);
+}
+.zoo-lv2 .zoo-ride { animation-duration: 1.6s; }
 
 /* Level 3 — invincible castle */
-.zoo-lv3 .zoo-roof {
-  background: linear-gradient(135deg, #ffd700, #ff8f00);
-  filter: drop-shadow(0 0 8px gold);
-}
-.zoo-lv3 .zoo-body {
-  background: linear-gradient(180deg, #fff3c4, #ffd700, #c49000);
-  box-shadow:
-    inset -4px -4px 0 rgba(0,0,0,0.3),
-    inset 3px 3px 0 rgba(255,255,255,0.4),
-    0 0 22px rgba(255, 215, 0, 0.9),
-    0 4px 14px rgba(0,0,0,0.6);
+.zoo-lv3 .zoo-park {
+  border-color: #ffd700;
+  border-width: 4px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255,215,0,0.5), transparent 70%),
+    linear-gradient(180deg, #c49000, #8b6508);
   animation: zooGlow 2s infinite ease-in-out;
 }
 @keyframes zooGlow {
-  0%, 100% { box-shadow: inset -4px -4px 0 rgba(0,0,0,0.3), inset 3px 3px 0 rgba(255,255,255,0.4), 0 0 22px rgba(255, 215, 0, 0.9), 0 4px 14px rgba(0,0,0,0.6); }
-  50% { box-shadow: inset -4px -4px 0 rgba(0,0,0,0.3), inset 3px 3px 0 rgba(255,255,255,0.4), 0 0 36px rgba(255, 215, 0, 1), 0 4px 14px rgba(0,0,0,0.6); }
+  0%, 100% { box-shadow: inset 0 -4px 8px rgba(0,0,0,0.4), 0 0 18px rgba(255, 215, 0, 0.7), 0 6px 14px rgba(0,0,0,0.55); }
+  50%      { box-shadow: inset 0 -4px 8px rgba(0,0,0,0.4), 0 0 34px rgba(255, 215, 0, 1),   0 6px 14px rgba(0,0,0,0.55); }
 }
+.zoo-lv3 .zoo-ride { animation-duration: 1.2s; }
 .zoo-lv3::before {
   content: '🛡️';
-  position: absolute; top: -22%; left: 50%;
+  position: absolute;
+  top: -4%; left: 50%;
   transform: translateX(-50%);
-  font-size: clamp(1em, 1.6vw, 1.4em);
+  font-size: clamp(0.9em, 1.5vw, 1.3em);
   filter: drop-shadow(0 0 6px gold);
+  z-index: 3;
 }
-.zoo-lv3 .zoo-label { color: #1a1a2e; text-shadow: 0 1px 2px rgba(255,255,255,0.8); }
+
+/* Reserve pool badge */
+.reserve-pool {
+  position: absolute;
+  top: 3px; right: 3px;
+  background: rgba(0,0,0,0.55);
+  color: #ffd700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: clamp(0.65em, 0.9vw, 0.85em);
+  font-weight: 900;
+  border: 1px solid #ffd700;
+  z-index: 4;
+  transition: transform .2s;
+}
+.reserve-pool.has-pool {
+  animation: reservePulse 1.5s infinite;
+}
+@keyframes reservePulse {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 4px rgba(255, 215, 0, 0.5); }
+  50%      { transform: scale(1.15); box-shadow: 0 0 10px rgba(255, 215, 0, 1);   }
+}
 
 /* ===== CENTER PANEL ===== */
 #center-panel {
@@ -342,15 +354,21 @@ html, body {
 }
 #btn-roll:disabled { opacity: .35; cursor: not-allowed; }
 
-/* Action box — always visible at bottom of left column */
+/* Action box — always visible at bottom of RIGHT column (below players) */
 #action-box {
   text-align: center;
   min-height: 66px;
   flex-shrink: 0;
   margin-top: auto;
-  padding-top: 6px;
+  padding: 10px 8px 4px;
   width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
+#action-box:empty { min-height: 0; padding: 0; }
 .action-btn {
   padding: 13px 24px; font-size: 1.15em; font-weight: bold;
   border: none; border-radius: 10px;
@@ -419,62 +437,64 @@ html, body {
 
 /* ===== VOLUME UI ===== */
 #volume-panel {
-  position: fixed; top: 12px; right: 12px;
+  position: fixed; top: 10px; right: 10px;
   background: rgba(22, 33, 62, 0.92);
   border: 2px solid #4facfe;
-  border-radius: 12px;
-  padding: 10px 14px;
-  display: flex; align-items: center; gap: 10px;
+  border-radius: 10px;
+  padding: 6px 10px;
+  display: flex; align-items: center; gap: 6px;
   z-index: 50;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   transition: opacity .2s, transform .2s;
+  font-size: 12px;
 }
 #volume-panel.hidden {
   opacity: 0; pointer-events: none;
   transform: translateY(-8px);
 }
 #volume-panel .vol-icon {
-  font-size: 1.3em; cursor: pointer;
+  font-size: 1em; cursor: pointer;
   user-select: none;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 2px 5px;
+  border-radius: 5px;
   transition: background .2s;
 }
 #volume-panel .vol-icon:hover { background: rgba(255,255,255,0.1); }
 #volume-panel .vol-row {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 0.9em; color: #ccc;
+  display: flex; align-items: center; gap: 4px;
+  color: #ccc;
 }
 #volume-panel input[type=range] {
-  width: 100px; cursor: pointer;
+  width: 70px; cursor: pointer;
   accent-color: #4facfe;
 }
-#volume-panel .vol-label { min-width: 36px; }
+#volume-panel .vol-label { min-width: 28px; font-size: 0.95em; }
 #volume-panel .vol-track-name {
-  font-size: 0.8em; color: #888; max-width: 140px;
+  font-size: 0.85em; color: #888; max-width: 110px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #volume-peek {
-  position: fixed; top: 12px; right: 12px;
+  position: fixed; top: 10px; right: 10px;
   background: rgba(22, 33, 62, 0.92);
   border: 2px solid #4facfe;
   border-radius: 50%;
-  width: 48px; height: 48px;
-  font-size: 1.5em;
+  width: 36px; height: 36px;
+  font-size: 1.1em;
   cursor: pointer;
   z-index: 50;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   display: none;
   align-items: center; justify-content: center;
   transition: transform .2s, box-shadow .2s;
   color: #fff;
+  padding: 0;
 }
 #volume-peek.show { display: flex; }
 #volume-peek:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 24px rgba(79, 172, 254, 0.6);
+  transform: scale(1.12);
+  box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
 }
 
 /* ===== MODAL ===== */

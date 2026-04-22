@@ -81,11 +81,14 @@ function renderBoard(state) {
     if (tile.type === 'reserve') nm = '생물<br>보호구역';
     if (tile.type === 'travel')  nm = '세계<br>동물여행';
 
+    const poolBadge = (tile.type === 'reserve')
+      ? `<div class="reserve-pool" id="reserve-pool">💰0</div>` : '';
     cell.innerHTML =
       `${regionBar}` +
       `<div class="tile-emoji">${tile.emoji}</div>` +
       `<div class="tile-name">${nm}</div>` +
       tax +
+      poolBadge +
       `<div class="tile-tokens" id="tokens-${tile.id}"></div>`;
     board.appendChild(cell);
   }
@@ -113,13 +116,13 @@ function renderBoard(state) {
         <div id="dice-sum"></div>
         <button id="btn-roll">🎲 주사위 굴리기</button>
       </div>
-      <div id="action-box"></div>
     </div>
     <div id="center-right">
       <div id="players-box">
         <h4>모둠 현황</h4>
         <div id="players-list"></div>
       </div>
+      <div id="action-box"></div>
     </div>`;
   board.appendChild(cp);
 
@@ -161,6 +164,13 @@ function hopToken(playerIdx) {
   }
 }
 
+// Amusement-park themed zoo: different ride per level
+const ZOO_RIDES = {
+  1: '🎡', // Ferris wheel
+  2: '🎢', // Roller coaster
+  3: '🏰', // Castle (invincible)
+};
+
 function renderZoos(state) {
   document.querySelectorAll('.zoo-indicator').forEach(el => el.remove());
   Object.entries(state.zoos).forEach(([tid, zoo]) => {
@@ -168,15 +178,16 @@ function renderZoos(state) {
     if (!el) return;
     const color = state.players[zoo.owner].color;
     const lvl = zoo.level;
+    const ride = ZOO_RIDES[lvl] || '🎡';
 
     const ind = document.createElement('div');
     ind.className = `zoo-indicator zoo-lv${lvl}`;
+    ind.style.setProperty('--zoo-color', color);
     ind.innerHTML = `
-      <div class="zoo-building" style="--zoo-color: ${color}">
-        <div class="zoo-roof"></div>
-        <div class="zoo-body">
-          <div class="zoo-door"></div>
-        </div>
+      <div class="zoo-park">
+        <div class="zoo-ride">${ride}</div>
+        ${lvl >= 2 ? '<span class="zoo-sparkle s1">✨</span><span class="zoo-sparkle s2">⭐</span>' : ''}
+        ${lvl >= 3 ? '<span class="zoo-sparkle s3">🎆</span><span class="zoo-sparkle s4">🎇</span>' : ''}
       </div>`;
     el.appendChild(ind);
   });
@@ -207,6 +218,15 @@ function renderPlayers(state) {
         <div class="p-zoos">🏛️ ${zc}</div>
       </div>`;
   });
+}
+
+function renderReservePool(state) {
+  const el = document.getElementById('reserve-pool');
+  if (!el) return;
+  const n = state.reservePool || 0;
+  el.textContent = `💰${n}`;
+  if (n > 0) el.classList.add('has-pool');
+  else el.classList.remove('has-pool');
 }
 
 function highlightTile(id) {
@@ -283,5 +303,5 @@ window.Render = {
   TILES, TILE_POS, PLAYER_COLORS, PLAYER_AVATARS,
   renderBoard, renderTokens, renderZoos, renderPlayers,
   updateTurnInfo, highlightTile, hopToken,
-  animateDiceRoll, showCountdown,
+  animateDiceRoll, showCountdown, renderReservePool,
 };

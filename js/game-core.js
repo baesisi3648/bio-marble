@@ -2,7 +2,7 @@
 // State, turn management, movement, landing handlers, quiz flow, keys.
 
 const START_COINS = 30;
-const RESERVE_BONUS = 5;
+const RESERVE_FEE = 5;          // paid into pool when pool is empty
 const START_PASS_BONUS = 2;
 const START_LAND_BONUS = 3;
 const QUIZ_TIME_SEC = 10;
@@ -29,6 +29,7 @@ let state = {
   players: [], current: 0, phase: 'roll',
   diceResult: 0, doubleTurnNext: [],
   zoos: {}, jailTurns: {},
+  reservePool: 0,
   currentQuiz: null, quizContext: null,
   quizTimerHandle: null,
 };
@@ -54,6 +55,7 @@ async function startGame() {
     players: [], current: 0, phase: 'roll',
     diceResult: 0, doubleTurnNext: [],
     zoos: {}, jailTurns: {},
+    reservePool: 0,
     currentQuiz: null, quizContext: null,
     quizTimerHandle: null,
   };
@@ -164,14 +166,7 @@ function handleLanding() {
     case 'animal': handleAnimal(tile); break;
     case 'jail': handleJail(); break;
     case 'reserve':
-      p.coins += RESERVE_BONUS;
-      AudioMgr.playSfx('coin');
-      Render.renderPlayers(state);
-      Render.updateTurnInfo(state);
-      showModal('🏕️', '생물 보호 구역',
-        `<p style="text-align:center">환경 보호 활동으로</p>
-         <p style="text-align:center;font-size:1.6em;color:#ffd700;font-weight:bold">+${RESERVE_BONUS} 코인 획득!</p>`,
-        [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+      handleReserve();
       break;
     case 'travel': handleTravel(); break;
     default:
@@ -185,6 +180,41 @@ function handleAnimal(tile) {
   if (zoo && zoo.owner === state.current) handleOwnZoo(tile, zoo);
   else if (zoo) handleOpponentZoo(tile, zoo);
   else askStartQuiz(tile, 'build');
+}
+
+// ===== 생물보호구역 (누적 시스템) =====
+// Pool empty  → player pays RESERVE_FEE (5) into pool
+// Pool filled → player claims pool total, pool resets to 0
+function handleReserve() {
+  const p = state.players[state.current];
+  if (state.reservePool > 0) {
+    const claim = state.reservePool;
+    p.coins += claim;
+    state.reservePool = 0;
+    AudioMgr.playSfx('coin');
+    Render.renderPlayers(state);
+    Render.updateTurnInfo(state);
+    Render.renderReservePool(state);
+    showModal('🏕️', '생물 보호 구역',
+      `<p style="text-align:center">누적된 보호 기금을</p>
+       <p style="text-align:center;font-size:1.8em;color:#ffd700;font-weight:bold">+${claim} 코인 획득!</p>
+       <p style="text-align:center;color:#888;font-size:0.9em">누적 기금이 초기화됩니다.</p>`,
+      [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+  } else {
+    const fee = Math.min(RESERVE_FEE, p.coins);
+    p.coins -= fee;
+    state.reservePool += fee;
+    AudioMgr.playSfx('coin');
+    if (p.coins <= 0) checkBankrupt(state.current);
+    Render.renderPlayers(state);
+    Render.updateTurnInfo(state);
+    Render.renderReservePool(state);
+    showModal('🏕️', '생물 보호 구역',
+      `<p style="text-align:center">생물 보호 기금 납부</p>
+       <p style="text-align:center;font-size:1.6em;color:#ef5350;font-weight:bold">-${fee} 코인</p>
+       <p style="text-align:center;color:#888;font-size:0.9em">누적 기금: ${state.reservePool}코인<br>다음 도착자가 전액 수령합니다.</p>`,
+      [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+  }
 }
 
 // ===== QUIZ FLOW =====
