@@ -93,7 +93,15 @@ function renderBoard(state) {
     board.appendChild(cell);
   }
 
-  // Center panel — grid layout: [title full-width] / [dice wide | players narrow] / [action full-width]
+  // Center panel
+  //   ┌────────────────────────────────┐
+  //   │  🌍 생명 마블 by 용쌤 (top)    │
+  //   ├────────────────┬───────────────┤
+  //   │                │ 모둠 현황     │
+  //   │  turn + dice   │ (players)     │
+  //   │  (left)        ├───────────────┤
+  //   │                │ action-box    │
+  //   └────────────────┴───────────────┘
   const cp = document.createElement('div');
   cp.id = 'center-panel';
   cp.innerHTML = `
@@ -117,11 +125,13 @@ function renderBoard(state) {
         <button id="btn-roll">🎲 주사위 굴리기</button>
       </div>
     </div>
-    <div id="players-box">
-      <h4>모둠 현황</h4>
-      <div id="players-list"></div>
-    </div>
-    <div id="action-box"></div>`;
+    <div id="right-column">
+      <div id="players-box">
+        <h4>모둠 현황</h4>
+        <div id="players-list"></div>
+      </div>
+      <div id="action-box"></div>
+    </div>`;
   board.appendChild(cp);
 
   renderTokens(state);
