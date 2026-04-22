@@ -13,43 +13,59 @@ html, body {
 #setup-screen {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  min-height: 100vh; padding: 20px;
+  min-height: 100vh; padding: 16px;
   overflow-y: auto;
 }
+#setup-screen .title-row {
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 14px; margin-bottom: 18px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+#setup-screen .title-emoji {
+  font-size: 2.4em;
+  line-height: 1;
+  /* deliberately NOT inside the gradient h1 so the emoji renders in color */
+}
 #setup-screen h1 {
-  font-size: 4em; margin-bottom: 10px;
+  font-size: 2.8em;
+  line-height: 1.1;
   background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
 }
-#setup-screen h2 { font-size: 1.4em; color: #aaa; margin-bottom: 30px; }
+#setup-screen .title-by {
+  font-size: 1em; color: #aaa; font-weight: 500;
+}
 .setup-box {
-  background: #16213e; border-radius: 20px;
-  padding: 40px; width: 100%; max-width: 560px;
+  background: #16213e; border-radius: 18px;
+  padding: 24px 28px; width: 100%; max-width: 520px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 .setup-box label {
-  display: block; margin-bottom: 10px;
-  font-weight: bold; color: #4facfe; font-size: 1.1em;
+  display: block; margin-bottom: 6px;
+  font-weight: bold; color: #4facfe; font-size: 1em;
 }
 .setup-box select, .setup-box input {
-  width: 100%; padding: 14px; margin-bottom: 18px;
+  width: 100%; padding: 10px 12px; margin-bottom: 10px;
   border: 2px solid #333; border-radius: 10px;
   background: #0f3460; color: #fff;
-  font-size: 1.1em; font-family: inherit;
+  font-size: 1em; font-family: inherit;
 }
 .player-name-row {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
 }
 .player-name-row .color-dot {
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.3em; flex-shrink: 0;
+  font-size: 1.2em; flex-shrink: 0;
   border: 2px solid #fff;
 }
 .player-name-row input { flex: 1; margin-bottom: 0; }
 #btn-start-game {
-  width: 100%; padding: 18px; margin-top: 20px;
-  font-size: 1.4em; font-weight: bold;
+  width: 100%; padding: 13px; margin-top: 10px;
+  font-size: 1.2em; font-weight: bold;
   border: none; border-radius: 12px;
   background: linear-gradient(135deg, #f093fb, #f5576c);
   color: #fff; cursor: pointer;
@@ -60,8 +76,8 @@ html, body {
   box-shadow: 0 8px 30px rgba(245, 87, 108, 0.5);
 }
 .setup-footer {
-  margin-top: 18px; text-align: center;
-  color: #888; font-size: 0.95em;
+  margin-top: 12px; text-align: center;
+  color: #888; font-size: 0.9em;
 }
 .setup-footer a { color: #4facfe; text-decoration: none; }
 .setup-footer a:hover { text-decoration: underline; }
