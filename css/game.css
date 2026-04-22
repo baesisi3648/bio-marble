@@ -338,22 +338,20 @@ html, body {
   50%      { transform: scale(1.15); box-shadow: 0 0 10px rgba(255, 215, 0, 1);   }
 }
 
-/* ===== CENTER PANEL (grid layout) =====
-   Title row on top (full width), then dice on left + right-column(players/action) on right. */
+/* ===== CENTER PANEL (3-column side-by-side) =====
+   Left: dice | Center: title centerpiece | Right: players + action */
 #center-panel {
   grid-column: 2/10; grid-row: 2/6;
   background: linear-gradient(135deg, #16213e, #1a1a3e);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   overflow: hidden;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 240px;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "title  title"
-    "dice   right";
-  gap: 8px 14px;
+  grid-template-columns: 1fr 1.2fr 240px;
+  grid-template-rows: 1fr;
+  grid-template-areas: "dice title right";
+  gap: 12px;
 }
 
 #right-column {
@@ -365,7 +363,7 @@ html, body {
   overflow: hidden;
 }
 
-/* Title — CENTERPIECE (부루마블 스타일: 보드 중앙 대형 로고) */
+/* Title — CENTERPIECE (center column) */
 #center-title {
   grid-area: title;
   display: flex;
@@ -373,18 +371,17 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 14px 0 10px;
   white-space: nowrap;
-  flex-shrink: 0;
+  min-height: 0;
 }
 #center-title .title-emoji {
-  font-size: clamp(2.2em, 4.8vw, 3.6em);
+  font-size: clamp(2em, 4.5vw, 3.4em);
   line-height: 1;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
   margin-bottom: -4px;
 }
 #center-title .title-text {
-  font-size: clamp(2.8em, 6vw, 5em);
+  font-size: clamp(2.6em, 5.5vw, 4.5em);
   font-weight: 900;
   line-height: 1;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
@@ -397,7 +394,7 @@ html, body {
   color: #aaa;
   font-size: clamp(0.85em, 1.3vw, 1.1em);
   letter-spacing: 2px;
-  margin-top: 4px;
+  margin-top: 6px;
   font-weight: 500;
 }
 
@@ -408,28 +405,28 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   min-height: 0;
   overflow: hidden;
 }
 
 /* Turn info */
 #turn-box { text-align: center; flex-shrink: 0; }
-#turn-box .turn-label { font-size: 1em; color: #4facfe; font-weight: bold; }
-#turn-box .turn-name { font-size: 1.9em; font-weight: bold; margin: 2px 0; }
-#turn-box .turn-coins { font-size: 1.35em; color: #ffd700; font-weight: bold; }
+#turn-box .turn-label { font-size: 0.9em; color: #4facfe; font-weight: bold; }
+#turn-box .turn-name { font-size: 1.5em; font-weight: bold; margin: 2px 0; }
+#turn-box .turn-coins { font-size: 1.15em; color: #ffd700; font-weight: bold; }
 
-/* ===== 3D DICE (대형) ===== */
+/* ===== 3D DICE (대형, responsive) ===== */
 #dice-box { text-align: center; flex-shrink: 0; }
 #dice-display {
-  display: flex; justify-content: center; gap: 36px;
-  margin: 10px 0 10px;
+  display: flex; justify-content: center; gap: clamp(14px, 2vw, 28px);
+  margin: 8px 0;
   perspective: 1000px;
-  min-height: 140px;
   align-items: center;
 }
 .dice-3d {
-  width: 128px; height: 128px;
+  width: clamp(80px, 8vw, 120px);
+  height: clamp(80px, 8vw, 120px);
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.15s;
@@ -438,10 +435,10 @@ html, body {
   position: absolute; inset: 0;
   background: #fff;
   color: #1a1a2e;
-  border-radius: 18px;
+  border-radius: 16px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 4.5em; font-weight: 900;
-  box-shadow: inset 0 0 0 4px #ddd, 0 10px 24px rgba(0,0,0,0.6);
+  font-size: clamp(2.6em, 4.8vw, 4em); font-weight: 900;
+  box-shadow: inset 0 0 0 3px #ddd, 0 8px 20px rgba(0,0,0,0.6);
 }
 .dice-3d.rolling {
   animation: diceTumble 0.9s cubic-bezier(.3,.1,.3,1.2);
@@ -455,16 +452,16 @@ html, body {
   100% { transform: scale(1) rotateX(1440deg) rotateY(1080deg); }
 }
 #dice-sum {
-  font-size: 1.6em; font-weight: bold; color: #ffd700;
+  font-size: 1.2em; font-weight: bold; color: #ffd700;
   min-height: 1.3em;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 #btn-roll {
-  padding: 14px 44px; font-size: 1.3em; font-weight: bold;
+  padding: 11px 28px; font-size: 1.1em; font-weight: bold;
   border: none; border-radius: 12px;
   background: linear-gradient(135deg, #4facfe, #00f2fe);
   color: #1a1a2e; cursor: pointer;
-  transition: all .2s; margin-top: 4px;
+  transition: all .2s; margin-top: 2px;
   box-shadow: 0 4px 16px rgba(79, 172, 254, 0.4);
 }
 #btn-roll:hover:not(:disabled) {
