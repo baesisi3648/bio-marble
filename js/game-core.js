@@ -20,18 +20,20 @@ const TOLL_MULT = { 1: 1, 2: 2, 3: 3 };
 // TILES, PLAYER_COLORS, PLAYER_AVATARS are global consts from render.js — do not redeclare.
 
 const GOLDEN_KEYS = [
-  { text:'생물 구조에 성공했습니다! 상금 +1 코인',  effect:'coins',       value:1 },
   { text:'생물 구조에 성공했습니다! 상금 +2 코인',  effect:'coins',       value:2 },
-  { text:'생물 구조에 성공했습니다! 상금 +3 코인',  effect:'coins',       value:3 },
-  { text:'생물 구조에 성공했습니다! 상금 +5 코인',  effect:'coins',       value:5 },
-  { text:'생물 구조에 실패했습니다... 벌금 -1 코인', effect:'coins',       value:-1 },
+  { text:'생물 구조에 성공했습니다! 상금 +4 코인',  effect:'coins',       value:4 },
+  { text:'생물 구조에 성공했습니다! 상금 +6 코인',  effect:'coins',       value:6 },
+  { text:'생물 구조에 성공했습니다! 상금 +8 코인',  effect:'coins',       value:8 },
   { text:'생물 구조에 실패했습니다... 벌금 -2 코인', effect:'coins',       value:-2 },
+  { text:'생물 구조에 실패했습니다... 벌금 -4 코인', effect:'coins',       value:-4 },
   { text:'원하는 곳으로 이동할 수 있습니다!',        effect:'teleport',   value:0 },
   { text:'상대 팀의 동물원 하나를 가로챌 수 있습니다!', effect:'steal',     value:0 },
   { text:'상대 팀과 우리 팀의 동물원을 교체합니다!',   effect:'swap',      value:0 },
   { text:'상대 팀 동물원 하나를 폐쇄합니다!',          effect:'close',     value:0 },
   { text:'원하는 곳에 동물원을 무상 설립!',            effect:'free_zoo',  value:0 },
   { text:'다음 턴에 주사위를 두 번 던집니다!',         effect:'double_turn', value:0 },
+  { text:'다른 팀 하나를 감옥으로 보냅니다!',          effect:'jail_opponent', value:0 },
+  { text:'다른 팀과 코인을 교환합니다!',               effect:'swap_coins', value:0 },
 ];
 
 let state = {
@@ -566,12 +568,12 @@ function upgradeAfterQuiz(tile, ok) {
 }
 
 // ===== JAIL =====
+// 처음 감옥 칸에 도착했을 때 — 주사위 더블 탈출은 불가 (다음 턴부터)
 function handleJail() {
   const p = state.players[state.current];
   state.jailTurns[state.current] = 2;
   AudioMgr.playSfx('jail');
   const btns = [
-    { text:'🎲 주사위 탈출 시도', class:'btn-upgrade', action(){ closeModal(); tryJailEscape(); } },
     { text:'감옥에서 대기', class:'btn-fail', action(){ closeModal(); showNextTurn(); } },
   ];
   if (p.coins >= JAIL_ESCAPE_COST) btns.unshift({
@@ -586,7 +588,8 @@ function handleJail() {
     }
   });
   showModal('⛓️','감옥!',
-    `<p style="text-align:center">${JAIL_ESCAPE_COST}코인 납부 또는 주사위 <b>더블</b>로 탈출<br>실패 시 2턴 정지</p>`, btns);
+    `<p style="text-align:center">${JAIL_ESCAPE_COST}코인 납부 또는 2턴 정지<br>` +
+    `<span style="color:#aaa;font-size:0.9em">(다음 턴부터 주사위 더블로 탈출 가능)</span></p>`, btns);
 }
 
 function checkJailOnTurn() {
@@ -721,6 +724,8 @@ function drawGoldenKey() {
     case 'close':    showZooPick('close', ch); break;
     case 'swap':     showZooPick('swap', ch); break;
     case 'free_zoo': showFreeZooPick(ch); break;
+    case 'jail_opponent': showJailOpponentPick(ch); break;
+    case 'swap_coins':    showCoinSwapPick(ch); break;
   }
 }
 
@@ -807,6 +812,83 @@ function freeBuild(id) {
   showNextTurn();
 }
 window.freeBuild = freeBuild;
+
+// 다른 팀 하나를 감옥(tile 14)으로 보내기
+function showJailOpponentPick(ch) {
+  const me = state.current;
+  const rows = state.players
+    .map((p, i) => ({ player: p, idx: i }))
+    .filter(x => !x.player.bankrupt && x.idx !== me && state.jailTurns[x.idx] === undefined)
+    .map(x =>
+      `<button class="pick-btn" style="background:${x.player.color}" onclick="sendToJail(${x.idx})">` +
+      `${PLAYER_AVATARS[x.idx]} ${x.player.name}</button>`
+    ).join('');
+  if (!rows) {
+    showModal('🔑','생물 구조 열쇠',
+      `${ch}<p style="text-align:center">감옥으로 보낼 수 있는 팀이 없습니다.</p>`,
+      [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+    return;
+  }
+  showModal('🔑','생물 구조 열쇠',
+    `${ch}<p style="text-align:center">감옥으로 보낼 팀 선택:</p><div class="pick-list">${rows}</div>`,
+    [], false);
+}
+
+function sendToJail(idx) {
+  closeModal();
+  const target = state.players[idx];
+  target.position = 14;
+  state.jailTurns[idx] = 2;
+  AudioMgr.playSfx('jail');
+  Render.renderTokens(state);
+  Render.highlightTile(14);
+  showModal('⛓️','감옥행!',
+    `<p style="text-align:center"><b style="color:${target.color}">${PLAYER_AVATARS[idx]} ${target.name}</b>을(를) 감옥으로 보냈습니다.</p>`,
+    [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+}
+window.sendToJail = sendToJail;
+
+// 다른 팀과 코인 교환 (모든 팀 코인 표시, 자기 팀 포함 선택 가능)
+function showCoinSwapPick(ch) {
+  const me = state.current;
+  const rows = state.players
+    .map((p, i) => ({ player: p, idx: i }))
+    .filter(x => !x.player.bankrupt)
+    .map(x => {
+      const isMe = x.idx === me;
+      const border = isMe ? 'outline:3px dashed #fff;' : '';
+      const meLabel = isMe ? ' (우리 조)' : '';
+      return `<button class="pick-btn" style="background:${x.player.color};${border}min-width:150px;line-height:1.3" onclick="pickCoinSwap(${x.idx})">` +
+        `${PLAYER_AVATARS[x.idx]} ${x.player.name}${meLabel}<br>` +
+        `<span style="font-size:1.1em;color:#ffd700">💰 ${x.player.coins}</span></button>`;
+    }).join('');
+  showModal('🔑','생물 구조 열쇠',
+    `${ch}<p style="text-align:center">코인을 교환할 팀 선택 (자기 팀 선택 시 교환 없음)</p>` +
+    `<div class="pick-list">${rows}</div>`,
+    [], false);
+}
+
+function pickCoinSwap(idx) {
+  closeModal();
+  if (idx === state.current) {
+    // Self-selected — no swap
+    showModal('🔑','교환 취소',
+      '<p style="text-align:center">자기 팀을 선택해서 교환이 일어나지 않았습니다.</p>',
+      [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+    return;
+  }
+  const a = state.players[state.current];
+  const b = state.players[idx];
+  const tmp = a.coins; a.coins = b.coins; b.coins = tmp;
+  AudioMgr.playSfx('coin');
+  Render.renderPlayers(state);
+  Render.updateTurnInfo(state);
+  showModal('💱','코인 교환 완료',
+    `<p style="text-align:center"><b style="color:${a.color}">${a.name}</b> 💰${a.coins} ⇄ ` +
+    `<b style="color:${b.color}">${b.name}</b> 💰${b.coins}</p>`,
+    [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
+}
+window.pickCoinSwap = pickCoinSwap;
 
 // ===== BANKRUPT =====
 function checkBankrupt(idx) {
