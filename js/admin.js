@@ -213,7 +213,7 @@ function importJson(file) {
 }
 
 async function resetToDefault() {
-  if (!confirm('기본값(19문제)으로 초기화합니다. 현재 문제는 모두 삭제됩니다. 계속?')) return;
+  if (!confirm('기본값으로 초기화합니다. 현재 저장된 문제는 모두 삭제되고 서버의 기본 문제 세트로 대체됩니다. 계속?')) return;
   try {
     const res = await fetch(DEFAULT_JSON_PATH + '?ts=' + Date.now());
     const json = await res.json();

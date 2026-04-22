@@ -7,10 +7,12 @@ const START_PASS_BONUS = 5;
 const START_LAND_BONUS = 7;
 const QUIZ_TIME_SEC = 10;
 const JAIL_ESCAPE_COST = 3;
-const BUILD_COST_SUCCESS = 2;           // 퀴즈 성공 시 건설비
-const BUILD_COST_FAIL_BASE = 4;         // 퀴즈 실패 시 건설비 (+세금)
-const TOLL_BASE = 2;                    // 관람비 기본 2코인 (+지역세금)
-const TOLL_FAIL_EXTRA = 2;              // 관람비 실패 시 추가 2코인
+// 레벨별 건설/업그레이드 비용 (세금 제거, 플랫 코인)
+// Lv.1 건설은 퀴즈 성공/실패에 따라 기본/2배
+// Lv.2, Lv.3 업그레이드는 퀴즈 없이 플랫 코스트
+const BUILD_LV_COST = { 1: 3, 2: 4, 3: 5 };
+const TOLL_BASE = 2;                    // 관람비 기본 = (세금 + 2) × 레벨배수
+const TOLL_FAIL_EXTRA = 3;              // 실패 시 관람비에 +3 flat
 // 관람비 배수: Lv.1 x1, Lv.2 x2, Lv.3 x3
 const TOLL_MULT = { 1: 1, 2: 2, 3: 3 };
 
@@ -120,18 +122,21 @@ function showRulesModal(onConfirm) {
       </div>
 
       <div class="rules-section">
-        <div class="rules-section-title">🐾 동물 칸 (퀴즈)</div>
+        <div class="rules-section-title">🐾 동물 칸 (퀴즈 & 건설)</div>
         <ul>
           <li>[시작] 버튼 → <b>3-2-1</b> → <b>10초</b> 문제 풀이</li>
-          <li>건설비 — 성공: <b>2코인</b> / 실패: <b>4 + 지역세금</b></li>
-          <li>🎡 Lv.1 (관람비 ×1) → 🎢 Lv.2 (×2) → 🏰 <b>Lv.3 무적</b> (×3)</li>
+          <li>🎡 <b>Lv.1 건설</b>: 성공 <b>3코인</b> / 실패 <b>6코인</b> (2배)</li>
+          <li>🎢 <b>Lv.2 업그레이드</b>: <b>4코인</b> (퀴즈 없음)</li>
+          <li>🏰 <b>Lv.3 업그레이드</b>: <b>5코인</b> (무적, 퀴즈 없음)</li>
+          <li>건설비는 지역 세금과 무관 (실패하면 두 배)</li>
         </ul>
       </div>
 
       <div class="rules-section">
         <div class="rules-section-title">🏛️ 상대 동물원 방문</div>
         <ul>
-          <li>관람비 = (세금 + 2) × Lv배수, 실패 시 +2코인</li>
+          <li>관람비 = <b>(세금 + 2) × Lv배수</b> (Lv.1 ×1 / Lv.2 ×2 / Lv.3 ×3)</li>
+          <li>퀴즈 실패 시 관람비에 <b>+3코인</b> 추가</li>
           <li>퀴즈 성공 + <b>Lv.1 동물원</b>일 때만 <b>2배 지불로 인수</b> 가능</li>
           <li>Lv.2 이상은 인수 불가 (관람비만 지불)</li>
           <li>인수해도 레벨은 Lv.1 유지 (업그레이드 X)</li>
@@ -428,7 +433,8 @@ function escapeHtml(s) {
 // ===== BUILD / TOLL =====
 function buildAfterQuiz(tile, ok) {
   const p = state.players[state.current];
-  const cost = ok ? BUILD_COST_SUCCESS : (BUILD_COST_FAIL_BASE + tile.tax);
+  const base = BUILD_LV_COST[1];            // Lv.1 신규 건설: 3코인
+  const cost = ok ? base : base * 2;        // 실패 시 2배 (6코인), 지역 세금 없음
   if (p.coins >= cost) {
     showAction([
       { text: `🏛️ 동물원 건설 (${cost}코인)`, class: 'action-btn btn-build', action() {
@@ -459,9 +465,9 @@ function tollAfterQuiz(tile, ok) {
   if (!zoo) { showNextTurn(); return; }
   const owner = state.players[zoo.owner];
   const mult = TOLL_MULT[zoo.level] || 1;
-  const toll = ok
-    ? (tile.tax + TOLL_BASE) * mult
-    : (tile.tax + TOLL_BASE + TOLL_FAIL_EXTRA) * mult;
+  // 관람비 = (세금 + 2) × Lv배수, 실패 시 +3코인 flat
+  const base = (tile.tax + TOLL_BASE) * mult;
+  const toll = ok ? base : base + TOLL_FAIL_EXTRA;
 
   const acts = [{
     text: `💰 관람비 ${toll}코인 지불`,
@@ -508,11 +514,12 @@ function handleOwnZoo(tile, zoo) {
       [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
     return;
   }
-  const cost = 2 + tile.tax;
+  const nextLv = zoo.level + 1;
+  const cost = BUILD_LV_COST[nextLv];        // Lv.2=4, Lv.3=5 (세금 없음)
   if (p.coins >= cost) {
     showAction([
       {
-        text: `⬆️ 업그레이드 Lv.${zoo.level + 1} (${cost}코인)${zoo.level + 1 === 3 ? ' 🛡️무적!' : ''}`,
+        text: `⬆️ 업그레이드 Lv.${nextLv} (${cost}코인)${nextLv === 3 ? ' 🛡️무적!' : ''}`,
         class: 'action-btn btn-upgrade',
         action() {
           p.coins -= cost;
