@@ -111,21 +111,31 @@ function movePlayer(steps) {
   state.phase = 'moving';
   const p = state.players[state.current];
   let moved = 0;
+  console.log('[bio] movePlayer start', { player: p.name, steps, from: p.position });
   const iv = setInterval(() => {
-    moved++;
-    p.position = (p.position + 1) % 28;
-    if (p.position === 0 && moved < steps) {
-      p.coins += START_PASS_BONUS;
-      AudioMgr.playSfx('coin');
-      Render.renderPlayers(state);
-    }
-    Render.renderTokens(state);
-    Render.hopToken(state.current);
-    Render.highlightTile(p.position);
-    Render.updateTurnInfo(state);
-    if (moved >= steps) {
+    try {
+      moved++;
+      p.position = (p.position + 1) % 28;
+      if (p.position === 0 && moved < steps) {
+        p.coins += START_PASS_BONUS;
+        AudioMgr.playSfx('coin');
+        Render.renderPlayers(state);
+      }
+      Render.renderTokens(state);
+      Render.hopToken(state.current);
+      Render.highlightTile(p.position);
+      Render.updateTurnInfo(state);
+      if (moved >= steps) {
+        clearInterval(iv);
+        console.log('[bio] movePlayer done, landing at', p.position, TILES[p.position]?.name);
+        setTimeout(() => {
+          try { handleLanding(); }
+          catch (e) { console.error('[bio] handleLanding error:', e); }
+        }, 350);
+      }
+    } catch (e) {
+      console.error('[bio] movePlayer step error:', e);
       clearInterval(iv);
-      setTimeout(() => handleLanding(), 350);
     }
   }, 220);
 }
@@ -134,6 +144,12 @@ function movePlayer(steps) {
 function handleLanding() {
   const p = state.players[state.current];
   const tile = TILES[p.position];
+  console.log('[bio] handleLanding', { player: p.name, pos: p.position, tile });
+  if (!tile) {
+    console.error('[bio] No tile at position', p.position);
+    showNextTurn();
+    return;
+  }
   Render.highlightTile(p.position);
 
   switch (tile.type) {
@@ -158,6 +174,9 @@ function handleLanding() {
         [{ text:'확인', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
       break;
     case 'travel': handleTravel(); break;
+    default:
+      console.warn('[bio] Unknown tile type:', tile.type);
+      showNextTurn();
   }
 }
 
@@ -172,6 +191,7 @@ function handleAnimal(tile) {
 // Stage 1: [시작] button in center action box
 function askStartQuiz(tile, purpose) {
   const quiz = QuizPool.draw();
+  console.log('[bio] askStartQuiz', { tile: tile.name, purpose, quizId: quiz?.id });
   if (!quiz) {
     // No questions available
     showModal('⚠️', '문제가 없습니다',
@@ -183,7 +203,6 @@ function askStartQuiz(tile, purpose) {
   state.quizContext = { tile, purpose };
   state.phase = 'quiz-ready';
 
-  const p = state.players[state.current];
   showAction([{
     text: `▶️ ${tile.name} 문제 시작`,
     class: 'action-btn btn-start-quiz',
@@ -626,13 +645,21 @@ function showNextTurn() {
 
 function showAction(acts) {
   const box = document.getElementById('action-box');
-  if (!box) return;
+  if (!box) {
+    console.error('[bio] action-box not found in DOM');
+    return;
+  }
+  console.log('[bio] showAction', acts.map(a => a.text));
   box.innerHTML = '';
   acts.forEach(a => {
     const b = document.createElement('button');
     b.className = a.class;
     b.textContent = a.text;
-    b.onclick = () => { box.innerHTML = ''; a.action(); };
+    b.onclick = () => {
+      box.innerHTML = '';
+      try { a.action(); }
+      catch (e) { console.error('[bio] action error:', e); }
+    };
     box.appendChild(b);
   });
 }

@@ -9,7 +9,7 @@
 <body>
 
 <!-- ===== VOLUME PANEL (shown during gameplay) ===== -->
-<div id="volume-panel" style="display:none">
+<div id="volume-panel" class="hidden">
   <span class="vol-icon" id="btn-mute" title="음소거">🔊</span>
   <div class="vol-row">
     <span class="vol-label">BGM</span>
@@ -20,7 +20,9 @@
     <input type="range" id="sfx-volume" min="0" max="1" step="0.05" value="0.7">
   </div>
   <span class="vol-track-name" id="bgm-track-name">♪</span>
+  <span class="vol-icon" id="btn-collapse" title="접기">✕</span>
 </div>
+<button id="volume-peek" title="볼륨 조절 열기">🎵</button>
 
 <!-- ===== SETUP SCREEN ===== -->
 <div id="setup-screen">
@@ -58,11 +60,13 @@
 </div>
 
 <!-- ===== SCRIPTS ===== -->
-<script src="js/audio.js"></script>
-<script src="js/quiz.js"></script>
-<script src="js/render.js"></script>
-<script src="js/game-core.js"></script>
-<script>
+<!-- data-cfasync="false" opts out of Cloudflare Rocket Loader, which can break
+     async timing and inline handlers -->
+<script data-cfasync="false" src="js/audio.js"></script>
+<script data-cfasync="false" src="js/quiz.js"></script>
+<script data-cfasync="false" src="js/render.js"></script>
+<script data-cfasync="false" src="js/game-core.js"></script>
+<script data-cfasync="false">
   // Bootstrap
   (async function() {
     AudioMgr.init();
@@ -72,9 +76,12 @@
     updatePlayerInputs();
 
     // Volume panel wiring
+    const panel     = document.getElementById('volume-panel');
+    const peek      = document.getElementById('volume-peek');
     const bgmSlider = document.getElementById('bgm-volume');
     const sfxSlider = document.getElementById('sfx-volume');
     const muteBtn   = document.getElementById('btn-mute');
+    const collapseBtn = document.getElementById('btn-collapse');
     const st = AudioMgr.getState();
     bgmSlider.value = st.bgmVolume;
     sfxSlider.value = st.sfxVolume;
@@ -87,11 +94,28 @@
       muteBtn.textContent = muted ? '🔇' : '🔊';
     });
 
-    // Show volume panel when game starts
+    // Collapse / expand
+    function collapsePanel() {
+      panel.classList.add('hidden');
+      peek.classList.add('show');
+    }
+    function expandPanel() {
+      panel.classList.remove('hidden');
+      peek.classList.remove('show');
+    }
+    collapseBtn.addEventListener('click', collapsePanel);
+    peek.addEventListener('click', expandPanel);
+
+    // Show collapsed-by-default peek button when game starts
     const origStart = window.startGame;
     window.startGame = async function() {
-      await origStart.apply(this, arguments);
-      document.getElementById('volume-panel').style.display = 'flex';
+      try {
+        await origStart.apply(this, arguments);
+      } catch (e) {
+        console.error('[bio-marble] startGame error:', e);
+      }
+      // Default state when game starts: panel expanded
+      expandPanel();
     };
   })();
 </script>
