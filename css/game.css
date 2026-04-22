@@ -111,23 +111,53 @@ html, body {
 }
 .tile:hover { filter: brightness(1.2); transform: scale(1.02); z-index: 2; }
 .tile .tile-emoji { font-size: clamp(1.8em, 3.2vw, 3em); line-height: 1; }
-.tile .tile-name { margin-top: 3px; line-height: 1.15; word-break: keep-all; font-size: clamp(0.9em, 1.3vw, 1.15em); }
+
+/* Default tile label: name above tax, both centered */
+.tile .tile-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 3px;
+}
+.tile .tile-name {
+  line-height: 1.15;
+  word-break: keep-all;
+  font-size: clamp(0.9em, 1.3vw, 1.15em);
+}
 .tile .tile-tax {
   font-size: clamp(0.7em, 1vw, 0.9em);
-  opacity: 0.85; margin-top: 2px;
+  opacity: 0.85;
   background: rgba(0,0,0,0.3);
   padding: 1px 8px; border-radius: 8px;
+  white-space: nowrap;
 }
 
-/* When a zoo is built on a tile, push name/tax below the zoo so animal name stays visible */
+/* When a zoo is built: hide emoji, stack everything into a single-line pill at bottom */
 .tile:has(.zoo-indicator) { padding-top: 54%; }
 .tile:has(.zoo-indicator) .tile-emoji { display: none; }
-.tile:has(.zoo-indicator) .tile-name {
-  background: rgba(0,0,0,0.6);
+.tile:has(.zoo-indicator) .tile-label {
+  flex-direction: row;
+  gap: 5px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.65);
   padding: 2px 6px;
   border-radius: 6px;
-  font-weight: 900;
   margin-top: 0;
+  max-width: 96%;
+}
+.tile:has(.zoo-indicator) .tile-name {
+  font-size: clamp(0.8em, 1.1vw, 1em);
+  font-weight: 900;
+}
+.tile:has(.zoo-indicator) .tile-tax {
+  font-size: clamp(0.65em, 0.9vw, 0.8em);
+  background: transparent;
+  padding: 0;
+  opacity: 0.9;
+  font-weight: 700;
 }
 .tile .region-bar { position: absolute; top: 0; left: 0; right: 0; height: 6px; }
 

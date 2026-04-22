@@ -632,9 +632,27 @@ function showTeleport() {
 
 function teleportTo(id) {
   closeModal();
-  state.players[state.current].position = id;
+  const p = state.players[state.current];
+  const from = p.position;
+  const to = id;
+
+  // Going clockwise from `from` to `to` — does the path pass position 0 as an intermediate tile?
+  const forwardDist = (to - from + 28) % 28;
+  let passedStart = false;
+  for (let step = 1; step < forwardDist; step++) {
+    if ((from + step) % 28 === 0) { passedStart = true; break; }
+  }
+
+  if (passedStart) {
+    p.coins += START_PASS_BONUS;
+    AudioMgr.playSfx('coin');
+    Render.renderPlayers(state);
+    Render.updateTurnInfo(state);
+  }
+
+  p.position = to;
   Render.renderTokens(state);
-  Render.highlightTile(id);
+  Render.highlightTile(to);
   setTimeout(() => handleLanding(), 400);
 }
 window.teleportTo = teleportTo;

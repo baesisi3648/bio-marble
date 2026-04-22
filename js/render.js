@@ -74,8 +74,8 @@ function renderBoard(state) {
       const rc = { '초원':'#66bb6a', '극지방':'#4fc3f7', '바다':'#1e88e5', '삼림':'#2e7d32' };
       regionBar = `<div class="region-bar" style="background:${rc[tile.region]}"></div>`;
     }
-    const tax = tile.tax > 0
-      ? `<div class="tile-tax">${tile.region} ${tile.tax}💰</div>` : '';
+    const taxSpan = tile.tax > 0
+      ? `<span class="tile-tax">${tile.region} ${tile.tax}💰</span>` : '';
     let nm = tile.name;
     if (tile.type === 'key')     nm = '생물구조<br>열쇠';
     if (tile.type === 'reserve') nm = '생물<br>보호구역';
@@ -86,8 +86,10 @@ function renderBoard(state) {
     cell.innerHTML =
       `${regionBar}` +
       `<div class="tile-emoji">${tile.emoji}</div>` +
-      `<div class="tile-name">${nm}</div>` +
-      tax +
+      `<div class="tile-label">` +
+        `<span class="tile-name">${nm}</span>` +
+        taxSpan +
+      `</div>` +
       poolBadge +
       `<div class="tile-tokens" id="tokens-${tile.id}"></div>`;
     board.appendChild(cell);
