@@ -7,9 +7,10 @@ const START_PASS_BONUS = 5;
 const START_LAND_BONUS = 7;
 const QUIZ_TIME_SEC = 10;
 const JAIL_ESCAPE_COST = 3;
-// 레벨별 건설/업그레이드 비용 (세금 제거, 플랫 코인)
-// Lv.1 건설은 퀴즈 성공/실패에 따라 기본/2배
-// Lv.2, Lv.3 업그레이드는 퀴즈 없이 플랫 코스트
+// 레벨별 건설/업그레이드 기본 비용 (추가로 지역 세금이 붙음)
+// 성공: 지역세금 + 기본비용
+// 실패: 지역세금×2 + 기본비용
+// 모든 레벨(Lv.1 신규 / Lv.2 / Lv.3 업그레이드)에 퀴즈 존재
 const BUILD_LV_COST = { 1: 3, 2: 4, 3: 5 };
 const TOLL_BASE = 2;                    // 관람비 기본 = (세금 + 2) × 레벨배수
 const TOLL_FAIL_EXTRA = 3;              // 실패 시 관람비에 +3 flat
@@ -122,13 +123,14 @@ function showRulesModal(onConfirm) {
       </div>
 
       <div class="rules-section">
-        <div class="rules-section-title">🐾 동물 칸 (퀴즈 & 건설)</div>
+        <div class="rules-section-title">🐾 동물 칸 (퀴즈 & 건설/업그레이드)</div>
         <ul>
           <li>[시작] 버튼 → <b>3-2-1</b> → <b>10초</b> 문제 풀이</li>
-          <li>🎡 <b>Lv.1 건설</b>: 성공 <b>3코인</b> / 실패 <b>6코인</b> (2배)</li>
-          <li>🎢 <b>Lv.2 업그레이드</b>: <b>4코인</b> (퀴즈 없음)</li>
-          <li>🏰 <b>Lv.3 업그레이드</b>: <b>5코인</b> (무적, 퀴즈 없음)</li>
-          <li>건설비는 지역 세금과 무관 (실패하면 두 배)</li>
+          <li>건설비 = <b>지역세금 + 레벨비용</b> · 실패 시 <b>지역세금만 2배</b></li>
+          <li>🎡 <b>Lv.1 건설</b>: 레벨비용 <b>3</b> (예: 초원 성공 4 / 실패 5)</li>
+          <li>🎢 <b>Lv.2 업그레이드</b>: 레벨비용 <b>4</b> (자기 동물원 재방문)</li>
+          <li>🏰 <b>Lv.3 업그레이드</b>: 레벨비용 <b>5</b> (무적)</li>
+          <li>모든 레벨 업그레이드 시 퀴즈 필수</li>
         </ul>
       </div>
 
@@ -423,6 +425,7 @@ function finishQuiz(ok) {
 
   if (purpose === 'build') buildAfterQuiz(tile, ok);
   else if (purpose === 'toll') tollAfterQuiz(tile, ok);
+  else if (purpose === 'upgrade') upgradeAfterQuiz(tile, ok);
 }
 
 function escapeHtml(s) {
@@ -433,8 +436,9 @@ function escapeHtml(s) {
 // ===== BUILD / TOLL =====
 function buildAfterQuiz(tile, ok) {
   const p = state.players[state.current];
-  const base = BUILD_LV_COST[1];            // Lv.1 신규 건설: 3코인
-  const cost = ok ? base : base * 2;        // 실패 시 2배 (6코인), 지역 세금 없음
+  const base = BUILD_LV_COST[1];                    // Lv.1: 3코인
+  const taxCost = ok ? tile.tax : tile.tax * 2;     // 실패 시 지역세금만 2배
+  const cost = taxCost + base;                      // 예: 초원1+3=4 성공 / 초원2+3=5 실패
   if (p.coins >= cost) {
     showAction([
       { text: `🏛️ 동물원 건설 (${cost}코인)`, class: 'action-btn btn-build', action() {
@@ -507,7 +511,6 @@ function tollAfterQuiz(tile, ok) {
 }
 
 function handleOwnZoo(tile, zoo) {
-  const p = state.players[state.current];
   if (zoo.level >= 3) {
     showModal('🛡️','무적 동물원',
       '<p style="text-align:center">이미 최고 등급입니다.</p>',
@@ -515,7 +518,29 @@ function handleOwnZoo(tile, zoo) {
     return;
   }
   const nextLv = zoo.level + 1;
-  const cost = BUILD_LV_COST[nextLv];        // Lv.2=4, Lv.3=5 (세금 없음)
+  const base = BUILD_LV_COST[nextLv];
+  // 안내용 예상 비용 (성공/실패 기준)
+  const successCost = tile.tax + base;
+  const failCost    = tile.tax * 2 + base;
+  showAction([
+    {
+      text: `⬆️ Lv.${nextLv} 업그레이드 도전 (성공 ${successCost} / 실패 ${failCost}코인)`,
+      class: 'action-btn btn-upgrade',
+      action() { askStartQuiz(tile, 'upgrade'); }
+    },
+    { text:'건너뛰기', class:'action-btn btn-skip', action(){ showNextTurn(); } },
+  ]);
+}
+
+// 업그레이드 퀴즈 결과 처리 — 건설과 동일하게 지역세금에 성공/실패 가산
+function upgradeAfterQuiz(tile, ok) {
+  const p = state.players[state.current];
+  const zoo = state.zoos[tile.id];
+  if (!zoo || zoo.owner !== state.current) { showNextTurn(); return; }
+  const nextLv = Math.min(zoo.level + 1, 3);
+  const base = BUILD_LV_COST[nextLv];
+  const taxCost = ok ? tile.tax : tile.tax * 2;
+  const cost = taxCost + base;
   if (p.coins >= cost) {
     showAction([
       {
@@ -523,7 +548,7 @@ function handleOwnZoo(tile, zoo) {
         class: 'action-btn btn-upgrade',
         action() {
           p.coins -= cost;
-          zoo.level++;
+          zoo.level = nextLv;
           AudioMgr.playSfx('zooBuild');
           Render.renderZoos(state);
           Render.renderPlayers(state);
@@ -534,7 +559,9 @@ function handleOwnZoo(tile, zoo) {
       { text:'건너뛰기', class:'action-btn btn-skip', action(){ showNextTurn(); } },
     ]);
   } else {
-    showNextTurn();
+    showModal('💸','코인 부족',
+      `<p style="text-align:center">Lv.${nextLv} 업그레이드 비용 <b>${cost}코인</b>이 부족합니다.</p>`,
+      [{ text:'다음 턴', class:'btn-close-modal', action(){ closeModal(); showNextTurn(); } }]);
   }
 }
 
