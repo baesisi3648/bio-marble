@@ -18,3 +18,5 @@ npm-debug.log*
 
 # Node (not used, but in case)
 node_modules/
+
+reference/
