@@ -658,13 +658,17 @@ function handleTravel() {
 }
 
 function showTeleport() {
-  const opts = TILES.filter(t => t.type === 'animal').map(t =>
-    `<button class="pick-btn" onclick="teleportTo(${t.id})">${t.emoji} ${t.name}</button>`
-  ).join('');
+  const animals = TILES.filter(t => t.type === 'animal');
+  const opts = animals.map(t => {
+    const occ = tileOccupancy(t.id);
+    return `<button class="pick-btn ${occ.cls}" onclick="teleportTo(${t.id})">` +
+           `<span class="pick-main">${t.emoji} ${t.name}</span>` +
+           `<span class="pick-sub">${occ.text}</span></button>`;
+  }).join('');
   showModal('✈️','세계 동물 여행',
     `<p style="text-align:center">이동할 칸을 선택하세요</p>
      <div class="pick-list">${opts}</div>`,
-    [], false);
+    [], { picker: true, targets: animals.map(t => t.id) });
 }
 
 function teleportTo(id) {
@@ -729,12 +733,24 @@ function drawGoldenKey() {
   }
 }
 
+// Occupancy caption shown under each tile name in a picker button.
+function tileOccupancy(tileId) {
+  const z = state.zoos[tileId];
+  if (!z) return { text: '비어있음', cls: 'pick-empty' };
+  const o = state.players[z.owner];
+  const shield = z.level >= 3 ? ' 🛡️' : '';
+  return { text: `${o.name} · Lv.${z.level}${shield}`, cls: 'pick-occupied' };
+}
+
 function showZooPick(action, ch) {
-  const zoos = Object.entries(state.zoos)
+  const targetIds = Object.entries(state.zoos)
     .filter(([, z]) => z.owner !== state.current && z.level < 3)
-    .map(([tid, z]) => {
-      const t = TILES[+tid], o = state.players[z.owner];
-      return `<button class="pick-btn" style="background:${o.color}" onclick="zooAction('${action}',${tid})">${t.emoji} ${t.name} (${o.name})</button>`;
+    .map(([tid]) => +tid);
+  const zoos = targetIds.map(tid => {
+      const t = TILES[tid], z = state.zoos[tid], o = state.players[z.owner];
+      return `<button class="pick-btn" style="background:${o.color}" onclick="zooAction('${action}',${tid})">` +
+             `<span class="pick-main">${t.emoji} ${t.name}</span>` +
+             `<span class="pick-sub">${o.name} · Lv.${z.level}</span></button>`;
     });
   if (!zoos.length) {
     showModal('🔑','생물 구조 열쇠',
@@ -745,7 +761,7 @@ function showZooPick(action, ch) {
   const lb = action === 'steal' ? '가로챌' : action === 'close' ? '폐쇄할' : '교체할';
   showModal('🔑','생물 구조 열쇠',
     `${ch}<p style="text-align:center">${lb} 동물원 선택:</p><div class="pick-list">${zoos.join('')}</div>`,
-    [], false);
+    [], { picker: true, targets: targetIds });
 }
 
 function zooAction(action, tid) {
@@ -768,14 +784,17 @@ function zooAction(action, tid) {
 window.zooAction = zooAction;
 
 function showSwapPick(targetId) {
-  const my = Object.entries(state.zoos)
+  const myIds = Object.entries(state.zoos)
     .filter(([, z]) => z.owner === state.current)
-    .map(([tid]) =>
-      `<button class="pick-btn" style="background:#2196f3" onclick="doSwap(${targetId},${tid})">${TILES[+tid].emoji} ${TILES[+tid].name}</button>`
+    .map(([tid]) => +tid);
+  const my = myIds.map(tid =>
+      `<button class="pick-btn" style="background:#2196f3" onclick="doSwap(${targetId},${tid})">` +
+      `<span class="pick-main">${TILES[tid].emoji} ${TILES[tid].name}</span>` +
+      `<span class="pick-sub">내 동물원 · Lv.${state.zoos[tid].level}</span></button>`
     );
-  if (!my.length) { showNextTurn(); return; }
+  if (!myIds.length) { showNextTurn(); return; }
   showModal('🔄','교체할 내 동물원',
-    `<div class="pick-list">${my.join('')}</div>`, [], false);
+    `<div class="pick-list">${my.join('')}</div>`, [], { picker: true, targets: myIds });
 }
 
 function doSwap(a, b) {
@@ -790,8 +809,11 @@ function doSwap(a, b) {
 window.doSwap = doSwap;
 
 function showFreeZooPick(ch) {
-  const empty = TILES.filter(t => t.type === 'animal' && !state.zoos[t.id])
-    .map(t => `<button class="pick-btn" style="background:#4caf50" onclick="freeBuild(${t.id})">${t.emoji} ${t.name}</button>`);
+  const emptyTiles = TILES.filter(t => t.type === 'animal' && !state.zoos[t.id]);
+  const empty = emptyTiles.map(t =>
+    `<button class="pick-btn pick-empty" onclick="freeBuild(${t.id})">` +
+    `<span class="pick-main">${t.emoji} ${t.name}</span>` +
+    `<span class="pick-sub">${t.region} · 세금 ${t.tax}💰</span></button>`);
   if (!empty.length) {
     showModal('🔑','생물 구조 열쇠',
       `${ch}<p style="text-align:center">빈 칸이 없습니다.</p>`,
@@ -800,7 +822,7 @@ function showFreeZooPick(ch) {
   }
   showModal('🔑','무상 건설',
     `${ch}<p style="text-align:center">건설할 칸을 선택하세요</p><div class="pick-list">${empty.join('')}</div>`,
-    [], false);
+    [], { picker: true, targets: emptyTiles.map(t => t.id) });
 }
 
 function freeBuild(id) {
@@ -831,7 +853,7 @@ function showJailOpponentPick(ch) {
   }
   showModal('🔑','생물 구조 열쇠',
     `${ch}<p style="text-align:center">감옥으로 보낼 팀 선택:</p><div class="pick-list">${rows}</div>`,
-    [], false);
+    [], { picker: true });
 }
 
 function sendToJail(idx) {
@@ -865,7 +887,7 @@ function showCoinSwapPick(ch) {
   showModal('🔑','생물 구조 열쇠',
     `${ch}<p style="text-align:center">코인을 교환할 팀 선택 (자기 팀 선택 시 교환 없음)</p>` +
     `<div class="pick-list">${rows}</div>`,
-    [], false);
+    [], { picker: true });
 }
 
 function pickCoinSwap(idx) {
@@ -965,9 +987,14 @@ function nextTurn() {
 }
 
 // ===== MODAL =====
-function showModal(emoji, title, content, buttons = []) {
+// opts.picker  — keep the board readable behind the modal (no blur, light dim)
+// opts.targets — tile ids to glow on the board as valid choices
+function showModal(emoji, title, content, buttons = [], opts = {}) {
   const m = document.getElementById('modal');
   const o = document.getElementById('modal-overlay');
+  o.classList.toggle('picker-mode', !!opts.picker);
+  if (opts.targets && opts.targets.length) Render.highlightPickTargets(opts.targets);
+  else Render.clearPickTargets();
   m.innerHTML =
     `<div class="modal-emoji">${emoji}</div>
      <h2>${title}</h2>
@@ -985,7 +1012,10 @@ function showModal(emoji, title, content, buttons = []) {
 }
 
 function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('show');
+  const o = document.getElementById('modal-overlay');
+  o.classList.remove('show');
+  o.classList.remove('picker-mode');
+  Render.clearPickTargets();
 }
 
 // Expose to window for inline handlers & bootstrap

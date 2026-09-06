@@ -1,13 +1,9 @@
 // ===== AUDIO MODULE =====
-// BGM: 3 tracks played in sequence, loop 1->2->3->1...
+// BGM: single track on endless loop.
 // SFX: named map, supports overlap via cloneNode()
 // Volume persisted to localStorage
 
-const BGM_TRACKS = [
-  { file: 'assets/bgm/bgm-01.mp3', name: 'Jazz of Maple' },
-  { file: 'assets/bgm/bgm-02.mp3', name: 'BGM 2' },
-  { file: 'assets/bgm/bgm-03.mp3', name: 'BGM 3' },
-];
+const BGM_TRACK = { file: 'assets/bgm/bgm-suryeon-forest.mp3', name: '수련의 숲' };
 
 const SFX_FILES = {
   dice:       'assets/sfx/dice-roll.mp3',
@@ -26,8 +22,7 @@ const LS_KEY_SFX_VOL = 'bio-marble.sfx-volume';
 const LS_KEY_MUTED   = 'bio-marble.muted';
 
 const AudioMgr = (() => {
-  let bgmAudio = null;          // current <audio> element for BGM
-  let bgmIndex = 0;             // track index
+  let bgmAudio = null;          // <audio> element for BGM
   let bgmStarted = false;       // user gesture happened
   let bgmVolume = 0.4;
   let sfxVolume = 0.7;
@@ -76,23 +71,11 @@ const AudioMgr = (() => {
   function startBgm() {
     if (bgmStarted) return;
     bgmStarted = true;
-    playBgmTrack(0);
-  }
-
-  function playBgmTrack(index) {
-    // Cleanup previous
-    if (bgmAudio) {
-      bgmAudio.pause();
-      bgmAudio.onended = null;
-      bgmAudio.src = '';
-    }
-    bgmIndex = index % BGM_TRACKS.length;
-    const track = BGM_TRACKS[bgmIndex];
-    bgmAudio = new Audio(track.file);
+    bgmAudio = new Audio(BGM_TRACK.file);
+    bgmAudio.loop = true;
     bgmAudio.volume = muted ? 0 : bgmVolume;
-    bgmAudio.onended = () => playBgmTrack(bgmIndex + 1);
     bgmAudio.play().catch(e => console.warn('BGM play failed:', e));
-    updateTrackDisplay(track.name);
+    updateTrackDisplay(BGM_TRACK.name);
   }
 
   function updateTrackDisplay(name) {

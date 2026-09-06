@@ -97,7 +97,7 @@ function renderBoard(state) {
 
   // Center panel
   //   ┌────────────────────────────────┐
-  //   │  🌍 생명 마블 by 용쌤 (top)    │
+  //   │  🌍 생명 마블 제작.배성용 (top) │
   //   ├────────────────┬───────────────┤
   //   │                │ 모둠 현황     │
   //   │  turn + dice   │ (players)     │
@@ -110,7 +110,7 @@ function renderBoard(state) {
     <div id="center-title">
       <span class="title-emoji">🌍</span>
       <span class="title-text">생명 마블</span>
-      <span class="title-by">by 용쌤</span>
+      <span class="title-by">제작. 용인삼계고 배성용</span>
     </div>
     <div id="dice-section">
       <div id="turn-box">
@@ -240,6 +240,20 @@ function renderReservePool(state) {
   else el.classList.remove('has-pool');
 }
 
+// Board tiles that are valid choices while a picker modal is open.
+function highlightPickTargets(ids) {
+  clearPickTargets();
+  ids.forEach(id => {
+    const el = document.getElementById(`tile-${id}`);
+    if (el) el.classList.add('pick-target');
+  });
+}
+
+function clearPickTargets() {
+  document.querySelectorAll('.tile.pick-target')
+    .forEach(el => el.classList.remove('pick-target'));
+}
+
 function highlightTile(id) {
   document.querySelectorAll('.tile').forEach(t => t.classList.remove('landed'));
   if (id < 0) return;
@@ -314,5 +328,6 @@ window.Render = {
   TILES, TILE_POS, PLAYER_COLORS, PLAYER_AVATARS,
   renderBoard, renderTokens, renderZoos, renderPlayers,
   updateTurnInfo, highlightTile, hopToken,
+  highlightPickTargets, clearPickTargets,
   animateDiceRoll, showCountdown, renderReservePool,
 };
