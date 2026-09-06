@@ -110,7 +110,7 @@ function renderBoard(state) {
     <div id="center-title">
       <span class="title-emoji">🌍</span>
       <span class="title-text">생명 마블</span>
-      <span class="title-by">제작. 용인삼계고 배성용</span>
+      <span class="title-by">제작. 용인삼계고 교사 배성용</span>
     </div>
     <div id="dice-section">
       <div id="turn-box">
